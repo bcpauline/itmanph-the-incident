@@ -1,38 +1,21 @@
-# IT MAN PH — THE INCIDENT | Interactive Seminar V5
+# IT MAN PH — THE INCIDENT V9 (Cloud-Synced Admin)
 
-Open `index.html` in your browser, or deploy this directory to GitHub + Cloudflare Pages. Keep all images next to `index.html`.
+This version retains the original 39 interactive slides, quizzes, Alex, timers, and certificate editor. Admin changes are published to a Cloudflare KV namespace and loaded across devices.
 
-## Classroom
-- First-slide registration and 15-second timed challenges.
-- Answers are selectable/changeable until 15 seconds expires and then locked in that local browser.
-- Use the fullscreen button or F key. Desktop fills the viewport; mobile reflows.
-- Certificate uses the attendee's registration name, seminar details, branding, and two signatories.
+## Deployment — repository folder is `itmanph-the-incident`
 
-## Hidden editor
-- Click the BytesCrafter company logo near IT MAN PH on the header to reveal the sign-in dialog.
-- Enter the administrator password supplied by the event organizer.
-- Edit slide content, prompts, answer choices, event information, labels, and images. Use Save & apply.
-- Export settings JSON to back up and publish changes. Import JSON on another browser to restore them.
-- For publishing changes to all participants, export settings and arrange distribution/import or embed saved JSON in a future built package. This version's edits are browser-local and are NOT centrally synchronized.
+1. Replace the existing files in your GitHub `itmanph-the-incident` subfolder with all files here (including `worker.mjs`, `wrangler.toml` and the `public/` folder).
+2. In Cloudflare dashboard, go to **Workers & Pages → KV → Create namespace**. Name it `itmanph-incident-settings`. Copy the namespace ID.
+3. Open `wrangler.toml` in GitHub and replace `REPLACE_WITH_YOUR_KV_NAMESPACE_ID` with the KV ID. Commit.
+4. In Cloudflare Workers → your Worker → **Settings → Variables and Secrets**, add `ADMIN_PASSWORD` as an encrypted **Secret**. Choose a new strong password (minimum 12 characters). Never commit it to GitHub. This replaces the previous public client-side password.
+5. Under **Settings → Build**, keep **Path** as `itmanph-the-incident` and change **Deploy command** to `npx wrangler deploy`. No extra `--assets .` flags; Wrangler reads `wrangler.toml`.
+6. Deploy the updated commit. Your existing custom domain remains attached to the Worker when reusing the same Worker name.
+7. Open the website, click the BytesCrafter logo, log in using the new secret, change a setting and click **Save & publish to all devices**. Check another device.
 
-## Security limitations
-This is a **static HTML site** and has **no secure server-side login**. Its editor password exists in downloadable JavaScript; it is a convenience UI guard, not secure authentication. Do not store confidential materials here or assume students cannot modify quiz data through developer tools. For secure admin access, shared updates, or tamper-resistant scores, add a server-side backend or an authentication provider and database.
-
-## Certification
-Signature 1 comes from the supplied Caezar image. The second signatory name is prefilled as Paolo Fidelis; no signature for Paolo was supplied. Upload his authorized signature in the editor. Check titles, date, organizer, and venue in editor before issuing certificates. Certificate is participation evidence, not an accreditation.
-
-## V6 changes
-- Removed square IT badge beside IT MAN PH. BytesCrafter logo remains the hidden admin entry.
-- Fresh participant registration/session storage for V6 to prevent an older test participant name or expired quiz timer from appearing. Browsers may autofill other form values, but the registration field has autocomplete disabled.
-- 15-second timers start on first visit to each scored challenge, permit answer changes until expiry, then lock the latest choice. Returning to an existing question does not restart the clock.
-- Admin Studio now provides certificate HEX colors (paper, frame, primary text, accent, secondary text) and an optional photo/artwork background; these affect both the preview and downloadable PNG.
-- Admin can reset the local student test session without losing slide or certificate settings. This option clears locally saved scores and answers.
-- Previous V5 admin settings are retained if stored in this browser. Export/Import JSON remains necessary to transfer edits between devices.
-
-Note: local-storage controls are not an anti-cheat mechanism. A backend is needed for secure scoring and authentication.
-
-## V7 usability fixes
-- BytesCrafter branding preserves transparent alpha on both the certificate preview and exported certificate (no solid dark rectangle behind the logo).
-- Certificate PNG uses a Blob download and also presents a persistent "Save certificate PNG" link if the browser blocks automatic downloads.
-- On iOS, use the visible Save link and the system Share/Save Image or Save to Files option when necessary.
-- Certificate download button is temporarily disabled during generation to prevent double taps.
+### Notes
+- Changes may take up to ~60 seconds to propagate globally due to Cloudflare KV caching; attendees' open tabs check for updates every 30 seconds when idle. Reload to check manually. Changes don't interrupt currently timed Q&A.
+- Browsers store student registrations and answers locally, as before. This release synchronizes **admin settings only**, not student scores.
+- The certificate background, custom elements, signatures, questions, titles, and uploaded images all share one KV settings JSON payload. Keep the total payload below 8 MB; use optimized images. To store larger galleries use R2 later.
+- No admin password exists in public JavaScript. Endpoint requests are authenticated server-side; for production consider Cloudflare Access, rate limiting, and auditing.
+- Export JSON remains available as backup. Import JSON creates a draft; click Save & publish to send to all devices.
+- Existing admin settings that were saved *only* in your previous browser are not automatically uploaded. Export them from V8 first and import them into V9, then publish.
